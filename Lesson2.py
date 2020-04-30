@@ -101,4 +101,73 @@ target = df.pop('target')
 dataset = tf.data.Dataset.from_tensor_slices((df.values, target.values))
 
 
-# TFExample class -- makes binaries
+# TFExample class -- Simplifies creating data binaries
+# for saving/loading data with TFRecord
+# Dictionary like object that easily converts to binary
+
+# Create array with 10000 examples
+n_observations = int[10000]
+
+# Create 4 features
+feature0 = np.random.choice([False, True], n_observations)
+feature1 = np.random.randint(0, 5, n_observations)
+strings = np.array([b'a', b'b', b'c', b'd'])
+feature2 = strings[feature1]
+feature3 = np.random.randn(n_observations)
+
+# Create tf.data object
+features_dataset  = tf.data.Dataset.from_tensor_slices(
+    [
+        feature0,
+        feature1,
+        feature2,
+        feature3
+    ]
+)
+
+for f0, f1, f2, f3 in features_dataset.take(1):
+    print(f0)
+    print(f1)
+    print(f2)
+    print(f3)
+
+# Need to serialize example
+# Need to use utilize functions to convert
+# using tf.train.feature
+# then serialize using tf.train.Example
+
+# Can then marshall data using tf.train.Example.FromString
+
+# USING TFRECORD
+# TFRecord --  Simple format for storing a sequence of binary records
+# Efficiently reads data linearly from disk.  This format is especially
+# beneficial if streamed over a network
+# TFRecord adds complexity
+# Only use if bottlenech in training is loading data
+
+def tf_serialize_example(f0,f1,f2,f3):
+        tf_string = tf.py_function(
+          serialize_example,
+          (f0,f1,f2,f3), # pass these args to the above function
+          tf.string)
+        return tf.reshape(tf_string, ()) # The result is a scalar
+    )
+
+# Map the serialize function over dataset to serialize it
+serialized_dataset  = features_dataset.map(tf_serialize_example)
+
+# Create a generator to save to disk
+def generator():
+    for feature in features_dataset:
+        yield serialize_example(*features)
+
+serialized_dataset = tf.data.Dataset.from_generator(
+    generator, output_types=tf.string, output_shapes=()
+)
+
+filename= 'tf_data_pipelines.tfrecord'
+writer = tf.data.experimental.TFRecordWriter(filename)
+writer.write(serialized_dataset)
+
+filenames = [filename]
+raw_dataset = tf.data.TFRecordDataset(filenames)
