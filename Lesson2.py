@@ -89,3 +89,16 @@ for values in train_dataset.take(1):
 
 csv_file = tf.keras.utils.get_file('heart.csv', 'https://storage.googleapis.com/applied-dl/heart.csv')
 
+# Turning objects into categories
+df['thal'] = pd.Categorical(df['thal'])
+df['thal'] = df['thal'].cat.codes
+df['thal'].head()
+
+# Grab the column target for the target variable
+target = df.pop('target')
+
+# Use of .values converts into numpy array
+dataset = tf.data.Dataset.from_tensor_slices((df.values, target.values))
+
+
+# TFExample class -- makes binaries
