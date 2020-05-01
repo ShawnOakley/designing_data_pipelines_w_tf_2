@@ -72,3 +72,60 @@ dataset3 = tf.data.Dataset.zip((dataset1, dataset2))
 # Padding these batches to make them the same size
 dataset4 = tf.data.Dataset.range(100)
 dataset4 = dataset4.map(lambda x: tf.fill([tf.cast(x, tf.int32)], x))
+
+# CREATING IMAGE OBJECTS USING GENERATORS
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import os
+
+URL = 'https://storage.googleapis.com/mledu-datasets/cats_and_digs_filtered.zip'
+path_to_zip = tf.keras.utils.get_file('cats_and_dogs.zip', origin=URL, extract=True)
+
+PATH = os.path.join(os.path.dirname(path_to_zip), 'cats_and_dogs_filtered')
+
+train_dir = os.path.join(PATH, 'train')
+train_cats_dir = os.path.join(train_dir, 'cats')
+
+batch_size = 128
+IMG_HEIGHT=150
+IMG_WIDTH=150
+
+train_image_generator = ImageDataGenerator(rescale=1./255)
+train_data_gen = train_image_generator.flow_from_directory(batch_size=batch_size,
+                                                           directory=train_dir,
+                                                           shuffle=True,
+                                                           target_size=(IMG_HEIGHT, IMG_WIDTH))
+
+# IMAGE DATA AUGMENTATION
+# Data augmentation increases the size of the data in the training set
+# to increase the number of data points in training
+
+# Image augmentation methods
+# rotation_range: rotate image in given range
+# width_shift_range: squeeze or stretch image horizontally
+# height_shift_range: squeeze or stretch image vertically
+# horizontal_flip: generate mirror image
+# zoom_range: zoom in on portion of image
+
+# Example:
+train_image_generator = ImageDataGenerator(rescale=1./255)
+train_data_gen = train_image_generator.flow_from_directory(batch_size=batch_size,
+                                                           directory=train_dir,
+                                                           shuffle=True,
+                                                           target_size=(IMG_HEIGHT, IMG_WIDTH))
+
+flipped_images = [train_data_gen[0][0][0] for i in range(5)]
+
+# In built manipulations for data generator
+image_gen = ImageDataGenerator(
+    rescale=1./255,
+    rotation_range=45,
+    width_shift_range=.15,
+    height_shift_range=.15,
+    horizontal_flip=True,
+    zoom_range=0.5
+)
+
+train_data_gen = image_gen.flow_from_directory(batch_size=batch_size,
+                                               directory=train_dir,
+                                               shuffle=True,
+                                               target_size={IMG_HEIGHT, IMG_WIDTH})
