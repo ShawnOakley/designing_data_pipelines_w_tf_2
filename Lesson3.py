@@ -55,3 +55,20 @@ test_dataset = df.drop(train_dataset.index)
 # Removes labels from train dataset
 train_labels = train_dataset.pop('MPG')
 test_labels = test_dataset.pop('MPG')
+
+# USING ZIP AND MAP
+
+dataset1 = tf.data.Dataset.from_tensor_slice(tf.random.uniform([4.10]))
+
+dataset2 = tf.data.Dataset.from_tensor_slices(
+    (
+        tf.random.uniform([4]),
+        tf.random.uniform([4,100], maxval=100, dtype=tf.int32)
+    )
+)
+
+dataset3 = tf.data.Dataset.zip((dataset1, dataset2))
+
+# Padding these batches to make them the same size
+dataset4 = tf.data.Dataset.range(100)
+dataset4 = dataset4.map(lambda x: tf.fill([tf.cast(x, tf.int32)], x))
